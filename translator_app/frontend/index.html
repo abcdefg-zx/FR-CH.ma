@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中法互译翻译工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🌐</span>
+                <span class="logo-text">中法互译工具</span>
+            </div>
+        </header>
+
+        <div class="steps-nav">
+            <div class="step" onclick="switchStep(1)">
+                <span class="step-number">1</span>
+                <span class="step-label">API设置</span>
+            </div>
+            <div class="step" onclick="switchStep(2)">
+                <span class="step-number">2</span>
+                <span class="step-label">导入语料</span>
+            </div>
+            <div class="step" onclick="switchStep(3)">
+                <span class="step-number">3</span>
+                <span class="step-label">翻译工作台</span>
+            </div>
+            <div class="step" onclick="switchStep(4)">
+                <span class="step-number">4</span>
+                <span class="step-label">记忆库管理</span>
+            </div>
+            <div class="step" onclick="switchStep(5)">
+                <span class="step-number">5</span>
+                <span class="step-label">实时字幕</span>
+            </div>
+            <div class="step" onclick="switchStep(6)">
+                <span class="step-number">6</span>
+                <span class="step-label">生词本</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="step1" class="step-content active">
+                <div class="section-title">
+                    <h2>API 设置</h2>
+                    <p>配置翻译服务的密钥与模型</p>
+                </div>
+                
+                <div class="api-config">
+                    <div class="service-tabs">
+                        <button class="tab-btn" onclick="switchService('free')">免费自动</button>
+                        <button class="tab-btn" onclick="switchService('google')">Google翻译</button>
+                        <button class="tab-btn" onclick="switchService('deepl')">DeepL</button>
+                        <button class="tab-btn" onclick="switchService('mymemory')">MyMemory</button>
+                        <button class="tab-btn" onclick="switchService('libre')">LibreTranslate</button>
+                        <button class="tab-btn" onclick="switchService('deepseek')">DeepSeek</button>
+                        <button class="tab-btn" onclick="switchService('openai')">OpenAI</button>
+                    </div>
+
+                    <div class="config-form">
+                        <div class="form-group">
+                            <label>API Key（免费服务可不填）</label>
+                            <input type="password" id="apiKey" placeholder="选择免费服务无需填写密钥" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>当前服务</label>
+                            <div id="serviceInfo" class="form-input" style="background: #E8F5E9; color: #2E7D32; padding: 12px 16px;">
+                                ✅ 免费自动模式（无需密钥）
+                            </div>
+                        </div>
+                        <div class="form-group" id="modelGroup" style="display:none">
+                            <label>模型</label>
+                            <select id="model" class="form-input">
+                                <option value="free">免费翻译引擎</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" onclick="saveApiConfig()">保存API设置</button>
+                    </div>
+                </div>
+
+                <div class="tips">
+                    <h4>💡 使用提示</h4>
+                    <ul>
+                        <li><strong>免费自动</strong>：无需密钥，自动尝试Google/MyMemory等多个引擎</li>
+                        <li><strong>Google翻译</strong>：免费，质量高，推荐使用</li>
+                        <li><strong>DeepL</strong>：翻译质量最高，免费版有限额，付费需填Key</li>
+                        <li><strong>MyMemory</strong>：免费社区翻译，适合简单文本</li>
+                        <li><strong>LibreTranslate</strong>：开源免费翻译服务</li>
+                        <li><strong>DeepSeek/OpenAI</strong>：需API密钥，失败时自动降级到免费服务</li>
+                        <li>API密钥仅保存在本地浏览器，不会上传到服务器</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="step2" class="step-content">
+                <div class="section-title">
+                    <h2>导入语料</h2>
+                    <p>上传中法术语文件（CSV/Excel）</p>
+                </div>
+
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <p>点击或拖拽文件到此处</p>
+                    <p class="upload-hint">支持 CSV、XLSX、XLS 格式</p>
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileUpload(this)">
+                </div>
+
+                <div class="file-format-info">
+                    <h4>📋 文件格式要求</h4>
+                    <p>文件需包含两列，第一列为中文术语，第二列为法语术语：</p>
+                    <table class="format-table">
+                        <tr><th>中文术语</th><th>法语术语</th></tr>
+                        <tr><td>计算机</td><td>ordinateur</td></tr>
+                        <tr><td>翻译</td><td>traduction</td></tr>
+                        <tr><td>人工智能</td><td>intelligence artificielle</td></tr>
+                    </table>
+                </div>
+
+                <div id="termsList" class="terms-list">
+                    <h4>📖 已导入术语</h4>
+                    <div id="termsEmpty" class="empty-state">暂无导入的术语</div>
+                    <table id="termsTable" class="data-table" style="display:none">
+                        <thead>
+                            <tr><th>中文术语</th><th>法语术语</th><th>操作</th></tr>
+                        </thead>
+                        <tbody id="termsBody"></tbody>
+                    </table>
+                    <button id="clearTermsBtn" class="btn-danger" onclick="clearAllTerms()" style="display:none">清空所有术语</button>
+                </div>
+            </div>
+
+            <div id="step3" class="step-content">
+                <div class="section-title">
+                    <h2>翻译工作台</h2>
+                    <p>中文 ⇄ 法语 互译</p>
+                </div>
+
+                <div class="translation-tabs">
+                    <button class="tab-btn active" onclick="switchTranslationMode('text')">文本翻译</button>
+                    <button class="tab-btn" onclick="switchTranslationMode('document')">文档翻译</button>
+                </div>
+
+                <div id="textTranslationPanel" class="translation-panel">
+                    <div class="panel-left">
+                        <div class="panel-header">
+                            <select id="sourceLang" class="lang-select" onchange="switchLangDirection()">
+                                <option value="zh">中文</option>
+                                <option value="fr">法语</option>
+                            </select>
+                            <button class="swap-btn" onclick="swapLanguages()">↔</button>
+                        </div>
+                        <textarea id="sourceText" class="text-input" placeholder="请输入要翻译的文本..."></textarea>
+                    </div>
+
+                    <div class="panel-right">
+                        <div class="panel-header">
+                            <select id="targetLang" class="lang-select" onchange="switchLangDirection()">
+                                <option value="fr">法语</option>
+                                <option value="zh">中文</option>
+                            </select>
+                            <button class="copy-btn" onclick="copyResult()">📋</button>
+                            <button class="copy-btn" onclick="validateTranslation()" title="校验修改">✓</button>
+                            <button class="copy-btn" onclick="addVocabFromSelection()" title="添加生词">📖</button>
+                        </div>
+                        <div id="targetText" class="text-output" contenteditable="true" placeholder="翻译结果将显示在这里..."></div>
+                    </div>
+                </div>
+
+                <div id="documentTranslationPanel" class="translation-panel" style="display:none">
+                    <div class="document-upload-area" onclick="document.getElementById('documentInput').click()">
+                        <div class="upload-icon">📄</div>
+                        <p>点击上传文档</p>
+                        <p class="upload-hint">支持 TXT、CSV、Excel、Word(.docx)、PPT(.pptx) 格式</p>
+                        <input type="file" id="documentInput" accept=".txt,.csv,.xlsx,.xls,.docx,.doc,.pptx,.ppt" style="display:none" onchange="handleDocumentUpload(this)">
+                    </div>
+                    
+                    <div id="documentResult" style="display:none">
+                        <div class="document-header">
+                            <div class="doc-info">
+                                <span id="docFileName" class="doc-name"></span>
+                                <span id="docStats" class="doc-stats"></span>
+                            </div>
+                            <button class="btn-secondary" onclick="exportDocumentTranslation()" style="margin-left:auto">📥 导出对照</button>
+                        </div>
+                        <div class="document-content">
+                            <div class="doc-section">
+                                <h4>原文</h4>
+                                <div id="docOriginal" class="doc-text" contenteditable="true"></div>
+                            </div>
+                            <div class="doc-section">
+                                <h4>译文</h4>
+                                <div id="docTranslated" class="doc-text" contenteditable="true"></div>
+                                <button class="btn-secondary" onclick="addVocabFromDocument()" style="margin-top:12px">📖 添加生词</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="translation-controls">
+                    <button class="btn-primary btn-large" onclick="performTranslation()">
+                        <span class="btn-icon">🔄</span>
+                        一键翻译
+                    </button>
+                    <button class="btn-secondary" onclick="clearTranslation()">清空</button>
+                    <button class="btn-secondary" onclick="exportCurrentTranslation()">📥 导出当前翻译</button>
+                    <button class="btn-secondary" onclick="addVocabFromSelection()">📖 添加生词</button>
+                </div>
+
+                <div id="translationStatus" class="status-bar"></div>
+            </div>
+
+            <div id="step4" class="step-content">
+                <div class="section-title">
+                    <h2>记忆库管理</h2>
+                    <p>查看和管理已沉淀的翻译记忆</p>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" id="memorySearch" placeholder="搜索翻译记忆..." class="search-input" oninput="searchMemory()">
+                    <button class="btn-primary" onclick="exportTranslations()">📥 导出全部</button>
+                </div>
+
+                <div id="memoryList" class="memory-list">
+                    <div id="memoryEmpty" class="empty-state">暂无翻译记忆</div>
+                    <table id="memoryTable" class="data-table" style="display:none">
+                        <thead>
+                            <tr>
+                                <th>原文</th>
+                                <th>译文</th>
+                                <th>方向</th>
+                                <th>时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memoryBody"></tbody>
+                    </table>
+                    <button id="clearMemoryBtn" class="btn-danger" onclick="clearAllMemory()" style="display:none">清空记忆库</button>
+                </div>
+            </div>
+
+            <div id="step5" class="step-content">
+                <div class="section-title">
+                    <h2>实时字幕</h2>
+                    <p>利用麦克风实时转写并翻译</p>
+                </div>
+
+                <div class="subtitle-controls">
+                    <button id="subtitleBtn" class="btn-primary btn-large" onclick="toggleSubtitle()">
+                        <span class="btn-icon">🎤</span>
+                        开启字幕
+                    </button>
+                    <div id="micStatus" class="status-indicator">
+                        <span class="status-dot offline"></span>
+                        <span>麦克风未开启</span>
+                    </div>
+                </div>
+
+                <div class="subtitle-settings">
+                    <div class="subtitle-direction">
+                        <label>翻译方向：</label>
+                        <select id="subtitleDirection" class="lang-select" onchange="changeSubtitleDirection()">
+                            <option value="fr-zh" selected>法语 → 中文</option>
+                            <option value="zh-fr">中文 → 法语</option>
+                        </select>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoTranslateToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">自动翻译</span>
+                    <button class="btn-secondary" onclick="addVocabFromSubtitle()" style="margin-left:auto">📖 添加生词</button>
+                    <button class="btn-secondary" onclick="clearSubtitleText()">清空字幕</button>
+                </div>
+
+                <div class="subtitle-panel">
+                    <div class="subtitle-box">
+                        <div class="subtitle-header">
+                            <span class="subtitle-lang">原文（<span id="subtitleSourceLabel">法语</span>）</span>
+                            <span class="recording-indicator" id="recordingIndicator" style="display:none">● 录音中</span>
+                        </div>
+                        <div id="subtitleOriginal" class="subtitle-text">点击"开启字幕"开始说话...</div>
+                    </div>
+
+                    <div class="subtitle-box">
+                        <div class="subtitle-header">
+                            <span class="subtitle-lang">译文（<span id="subtitleTargetLabel">中文</span>）</span>
+                        </div>
+                        <div id="subtitleTranslated" class="subtitle-text">翻译结果将显示在这里...</div>
+                    </div>
+                </div>
+
+                <div class="tips">
+                    <h4>💡 使用提示</h4>
+                    <ul>
+                        <li><strong>翻译方向</strong>：可选择"法语→中文"或"中文→法语"</li>
+                        <li>点击"开启字幕"按钮后，浏览器会请求麦克风权限</li>
+                        <li>说话时请保持连贯，系统会自动累积识别结果</li>
+                        <li>点击"清空字幕"可清除之前的识别内容</li>
+                        <li>实时字幕功能依赖浏览器的Web Speech API</li>
+                        <li>Chrome、Edge浏览器支持较好</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="step6" class="step-content">
+                <div class="section-title">
+                    <h2>生词本</h2>
+                    <p>查看和管理翻译过程中收集的生词</p>
+                </div>
+
+                <div class="vocab-filters">
+                    <button class="btn-secondary" onclick="loadVocabulary(false)">全部生词</button>
+                    <button class="btn-primary" onclick="loadVocabulary(true)">未掌握</button>
+                </div>
+
+                <div id="vocabStats" class="vocab-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalVocab">0</span>
+                        <span class="stat-label">总生词</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="masteredVocab">0</span>
+                        <span class="stat-label">已掌握</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="unmasteredVocab">0</span>
+                        <span class="stat-label">待记忆</span>
+                    </div>
+                </div>
+
+                <div id="vocabList" class="vocab-list">
+                    <div id="vocabEmpty" class="empty-state">暂无生词，翻译文本后会自动收集</div>
+                    <table id="vocabTable" class="data-table" style="display:none">
+                        <thead>
+                            <tr>
+                                <th>法语</th>
+                                <th>中文</th>
+                                <th>例句</th>
+                                <th>出现次数</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vocabBody"></tbody>
+                    </table>
+                    <button id="clearVocabBtn" class="btn-danger" onclick="clearAllVocabulary()" style="display:none">清空生词本</button>
+                </div>
+
+                <div class="tips">
+                    <h4>💡 使用提示</h4>
+                    <ul>
+                        <li>系统会自动收集翻译过程中遇到的生词</li>
+                        <li>点击"已掌握"标记可以标记已学会的单词</li>
+                        <li>生词按出现频率排序，方便优先记忆高频词</li>
+                        <li>可以查看生词的上下文，帮助理解用法</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="vocabModal" class="modal" style="display:none">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📖 添加生词</h3>
+                    <button class="modal-close" onclick="closeVocabModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>法语单词</label>
+                        <input type="text" id="vocabSourceWord" class="form-input" placeholder="输入或从上方选择">
+                    </div>
+                    <div class="form-group">
+                        <label>中文释义</label>
+                        <input type="text" id="vocabTargetWord" class="form-input" placeholder="输入对应的中文">
+                    </div>
+                    <div class="form-group">
+                        <label>上下文（可选）</label>
+                        <input type="text" id="vocabContext" class="form-input" placeholder="翻译上下文">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeVocabModal()">取消</button>
+                    <button class="btn-primary" onclick="submitVocab()">添加</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="editVocabModal" class="modal" style="display:none">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>✏️ 编辑生词</h3>
+                    <button class="modal-close" onclick="closeEditVocabModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>法语单词</label>
+                        <input type="text" id="editVocabSource" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>中文释义</label>
+                        <input type="text" id="editVocabTarget" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>例句</label>
+                        <textarea id="editVocabExample" class="form-input" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>添加新译法（一词多义）</label>
+                        <input type="text" id="editVocabNewMeaning" class="form-input" placeholder="输入新的译法，留空则不添加">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeEditVocabModal()">取消</button>
+                    <button class="btn-primary" onclick="submitEditVocab()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

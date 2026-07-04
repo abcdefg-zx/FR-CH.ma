@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 虚拟环境
+venv/
+env/
+.venv/
+ENV/
+
+# 数据库文件（部署时自动生成，不提交本地数据）
+*.db
+*.sqlite3
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# TRAE IDE 安装目录（与项目无关）
+TRAE SOLO CN/
+
+# Trae 工作区配置
+.trae/
+
+# 日志
+*.log
+
+# 临时文件
+*.tmp
+*.bak
+
+# 考试要求文档（非代码）
+*.docx
