@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import requests
 import os
-import pandas as pd
+import csv
 import io
 from datetime import datetime
 from database import (
@@ -1354,23 +1354,33 @@ async def import_terminology(request: ImportTermsRequest):
 
 @app.post("/api/terminology/upload")
 async def upload_terminology(file: UploadFile = File(...)):
+    content = await file.read()
+    rows = []
+    
     if file.filename.endswith('.csv'):
-        content = await file.read()
-        df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+        reader = csv.reader(io.StringIO(content.decode('utf-8')))
+        for row in reader:
+            if len(row) >= 2:
+                rows.append([row[0].strip(), row[1].strip()])
     elif file.filename.endswith('.xlsx') or file.filename.endswith('.xls'):
-        content = await file.read()
-        df = pd.read_excel(io.BytesIO(content))
+        try:
+            from openpyxl import load_workbook
+            wb = load_workbook(io.BytesIO(content), read_only=True)
+            ws = wb.active
+            for row in ws.iter_rows(values_only=True):
+                if len(row) >= 2:
+                    rows.append([str(row[0]).strip() if row[0] else '', str(row[1]).strip() if row[1] else ''])
+        except ImportError:
+            raise HTTPException(status_code=400, detail="需要安装openpyxl库来处理Excel文件")
     else:
         raise HTTPException(status_code=400, detail="不支持的文件格式，请上传CSV或Excel文件")
     
-    if len(df.columns) < 2:
-        raise HTTPException(status_code=400, detail="文件至少需要两列：中文术语和法语术语")
+    if not rows:
+        raise HTTPException(status_code=400, detail="文件中没有有效的数据")
     
     count = 0
-    for _, row in df.iterrows():
-        chinese = str(row.iloc[0]).strip()
-        french = str(row.iloc[1]).strip()
-        if chinese and french:
+    for chinese, french in rows:
+        if chinese and french and chinese != 'None' and french != 'None':
             add_terminology(chinese, french)
             count += 1
     
@@ -1430,11 +1440,19 @@ async def translate_document(file: UploadFile = File(...), source_lang: str = "z
     if filename.endswith('.txt'):
         text = content.decode('utf-8')
     elif filename.endswith('.csv'):
-        df = pd.read_csv(io.StringIO(content.decode('utf-8')))
-        text = df.to_string()
+        reader = csv.reader(io.StringIO(content.decode('utf-8')))
+        text = '\n'.join([','.join(row) for row in reader])
     elif filename.endswith('.xlsx') or filename.endswith('.xls'):
-        df = pd.read_excel(io.BytesIO(content))
-        text = df.to_string()
+        try:
+            from openpyxl import load_workbook
+            wb = load_workbook(io.BytesIO(content), read_only=True)
+            ws = wb.active
+            rows = []
+            for row in ws.iter_rows(values_only=True):
+                rows.append([str(cell) if cell else '' for cell in row])
+            text = '\n'.join(['\t'.join(row) for row in rows])
+        except ImportError:
+            raise HTTPException(status_code=400, detail="需要安装openpyxl库来处理Excel文件")
     elif filename.endswith('.docx') or filename.endswith('.doc'):
         try:
             text = extract_text_from_docx(content)
