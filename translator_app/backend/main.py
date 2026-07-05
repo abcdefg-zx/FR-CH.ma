@@ -177,12 +177,14 @@ def call_translation_api(text, source_lang, target_lang, api_key, model="deepsee
     text = text.strip()
     if not text:
         return ""
-    
-    if not api_key:
-        raise HTTPException(status_code=400, detail="请先在「API设置」中填写 DeepSeek 的 API Key")
+
+    # 优先使用前端传入的 Key，否则回退到环境变量
+    effective_key = api_key or os.getenv("DEEPSEEK_API_KEY", "")
+    if not effective_key:
+        raise HTTPException(status_code=400, detail="请先在「API设置」中填写 DeepSeek 的 API Key，或在服务器配置 DEEPSEEK_API_KEY 环境变量")
     
     try:
-        return translate_with_deepseek(text, source_lang, target_lang, api_key, model, base_url, terminology_hint)
+        return translate_with_deepseek(text, source_lang, target_lang, effective_key, model, base_url, terminology_hint)
     except HTTPException:
         raise
     except requests.exceptions.HTTPError as e:
