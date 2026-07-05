@@ -50,47 +50,32 @@
                 </div>
                 
                 <div class="api-config">
-                    <div class="service-tabs">
-                        <button class="tab-btn" onclick="switchService('free')">免费自动</button>
-                        <button class="tab-btn" onclick="switchService('google')">Google翻译</button>
-                        <button class="tab-btn" onclick="switchService('deepl')">DeepL</button>
-                        <button class="tab-btn" onclick="switchService('mymemory')">MyMemory</button>
-                        <button class="tab-btn" onclick="switchService('libre')">LibreTranslate</button>
-                        <button class="tab-btn" onclick="switchService('deepseek')">DeepSeek</button>
-                        <button class="tab-btn" onclick="switchService('openai')">OpenAI</button>
-                    </div>
-
                     <div class="config-form">
                         <div class="form-group">
-                            <label>API Key（免费服务可不填）</label>
-                            <input type="password" id="apiKey" placeholder="选择免费服务无需填写密钥" class="form-input">
+                            <label>DeepSeek API Key</label>
+                            <input type="password" id="apiKey" placeholder="请填写 DeepSeek API Key" class="form-input">
                         </div>
                         <div class="form-group">
-                            <label>当前服务</label>
-                            <div id="serviceInfo" class="form-input" style="background: #E8F5E9; color: #2E7D32; padding: 12px 16px;">
-                                ✅ 免费自动模式（无需密钥）
-                            </div>
-                        </div>
-                        <div class="form-group" id="modelGroup" style="display:none">
                             <label>模型</label>
                             <select id="model" class="form-input">
-                                <option value="free">免费翻译引擎</option>
+                                <option value="deepseek-chat">deepseek-chat</option>
+                                <option value="deepseek-reasoner">deepseek-reasoner</option>
                             </select>
                         </div>
-                        <button class="btn-primary" onclick="saveApiConfig()">保存API设置</button>
+                        <div class="form-group">
+                            <label>自定义 API 地址（可选）</label>
+                            <input type="text" id="baseUrl" class="form-input" placeholder="留空则使用官方地址 https://api.deepseek.com">
+                        </div>
+                        <button class="btn-primary" onclick="saveApiConfig()">保存设置</button>
                     </div>
                 </div>
 
                 <div class="tips">
                     <h4>💡 使用提示</h4>
                     <ul>
-                        <li><strong>免费自动</strong>：无需密钥，自动尝试Google/MyMemory等多个引擎</li>
-                        <li><strong>Google翻译</strong>：免费，质量高，推荐使用</li>
-                        <li><strong>DeepL</strong>：翻译质量最高，免费版有限额，付费需填Key</li>
-                        <li><strong>MyMemory</strong>：免费社区翻译，适合简单文本</li>
-                        <li><strong>LibreTranslate</strong>：开源免费翻译服务</li>
-                        <li><strong>DeepSeek/OpenAI</strong>：需API密钥，失败时自动降级到免费服务</li>
-                        <li>API密钥仅保存在本地浏览器，不会上传到服务器</li>
+                        <li>默认模型：<code>deepseek-chat</code>，翻译质量稳定</li>
+                        <li>API 密钥仅保存在本地浏览器，不会上传服务器</li>
+                        <li>如有自定义代理地址，可在上方填写自定义 API 地址</li>
                     </ul>
                 </div>
             </div>

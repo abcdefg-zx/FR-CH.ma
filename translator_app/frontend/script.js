@@ -1,20 +1,9 @@
 let currentStep = 1;
-let currentService = 'free';
 let recognition = null;
 let isSubtitleRunning = false;
 let currentTranslationMode = 'text';
 
 const API_BASE = 'http://localhost:8000';
-
-const serviceConfig = {
-    free: { models: ['free'], info: '✅ 免费自动模式（无需密钥）', needKey: false },
-    google: { models: ['google'], info: '✅ Google翻译（免费，无需密钥）', needKey: false },
-    deepl: { models: ['deepl-free', 'deepl-pro'], info: '✅ DeepL（免费版无需密钥，Pro版需填Key）', needKey: false },
-    mymemory: { models: ['mymemory'], info: '✅ MyMemory（免费，无需密钥）', needKey: false },
-    libre: { models: ['libre'], info: '✅ LibreTranslate（开源免费）', needKey: false },
-    deepseek: { models: ['deepseek-chat', 'deepseek-chat-v2'], info: '⚠️ DeepSeek（需API密钥）', needKey: true },
-    openai: { models: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'], info: '⚠️ OpenAI（需API密钥）', needKey: true }
-};
 
 function switchStep(step) {
     document.querySelectorAll('.step').forEach((el, index) => {
@@ -46,95 +35,30 @@ function switchStep(step) {
     }
 }
 
-function switchService(service) {
-    currentService = service;
-    
-    document.querySelectorAll('.service-tabs .tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    const config = serviceConfig[service];
-    const serviceInfo = document.getElementById('serviceInfo');
-    serviceInfo.textContent = config.info;
-    serviceInfo.style.background = config.needKey ? '#FFF3E0' : '#E8F5E9';
-    serviceInfo.style.color = config.needKey ? '#E65100' : '#2E7D32';
-    
-    const modelGroup = document.getElementById('modelGroup');
-    const modelSelect = document.getElementById('model');
-    
-    if (config.models.length > 1 && config.needKey) {
-        modelGroup.style.display = 'block';
-        modelSelect.innerHTML = '';
-        config.models.forEach(model => {
-            const option = document.createElement('option');
-            option.value = model;
-            option.textContent = model;
-            modelSelect.appendChild(option);
-        });
-    } else {
-        modelGroup.style.display = 'none';
-    }
-}
-
 function saveApiConfig() {
     const apiKey = document.getElementById('apiKey').value;
-    const modelSelect = document.getElementById('model');
-    const model = modelSelect ? modelSelect.value : serviceConfig[currentService].models[0];
+    const model = document.getElementById('model').value;
+    const baseUrl = document.getElementById('baseUrl').value;
     
     const config = {
         apiKey,
-        apiService: currentService,
-        model: model
+        model,
+        baseUrl
     };
     
     localStorage.setItem('translatorConfig', JSON.stringify(config));
     
-    showStatus('API配置已保存', 'success');
+    showStatus('设置已保存', 'success');
 }
 
 function loadApiConfig() {
     const config = localStorage.getItem('translatorConfig');
-    let apiService = 'free';
-    
     if (config) {
         const parsed = JSON.parse(config);
-        apiService = parsed.apiService || 'free';
         document.getElementById('apiKey').value = parsed.apiKey || '';
-    }
-    
-    currentService = apiService;
-    const svcConfig = serviceConfig[apiService] || serviceConfig['free'];
-    
-    const serviceInfo = document.getElementById('serviceInfo');
-    if (serviceInfo) {
-        serviceInfo.textContent = svcConfig.info;
-        serviceInfo.style.background = svcConfig.needKey ? '#FFF3E0' : '#E8F5E9';
-        serviceInfo.style.color = svcConfig.needKey ? '#E65100' : '#2E7D32';
-    }
-    
-    const serviceLabels = { free: '免费自动', google: 'Google翻译', deepl: 'DeepL', mymemory: 'MyMemory', libre: 'LibreTranslate', deepseek: 'DeepSeek', openai: 'OpenAI' };
-    document.querySelectorAll('.service-tabs .tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.textContent === serviceLabels[apiService]) {
-            btn.classList.add('active');
-        }
-    });
-    
-    const modelGroup = document.getElementById('modelGroup');
-    if (modelGroup) {
-        if (svcConfig.models.length > 1 && svcConfig.needKey) {
-            modelGroup.style.display = 'block';
-            const modelSelect = document.getElementById('model');
-            modelSelect.innerHTML = '';
-            svcConfig.models.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model;
-                option.textContent = model;
-                modelSelect.appendChild(option);
-            });
-        } else {
-            modelGroup.style.display = 'none';
+        document.getElementById('baseUrl').value = parsed.baseUrl || '';
+        if (parsed.model) {
+            document.getElementById('model').value = parsed.model;
         }
     }
 }
@@ -278,9 +202,8 @@ function getApiConfig() {
     }
     return {
         apiKey: "",
-        apiService: "free",
-        baseUrl: "",
-        model: "free"
+        model: "deepseek-chat",
+        baseUrl: ""
     };
 }
 
@@ -307,8 +230,8 @@ function performTextTranslation() {
         source_lang: document.getElementById('sourceLang').value,
         target_lang: document.getElementById('targetLang').value,
         api_key: config.apiKey || "",
-        api_service: config.apiService || "free",
-        model: config.model || "free"
+        model: config.model || "deepseek-chat",
+        base_url: config.baseUrl || ""
     };
     
     fetch(`${API_BASE}/api/translate`, {
@@ -364,8 +287,8 @@ function performDocumentTranslation() {
     formData.append('source_lang', document.getElementById('sourceLang').value);
     formData.append('target_lang', document.getElementById('targetLang').value);
     formData.append('api_key', config.apiKey || "");
-    formData.append('api_service', config.apiService || "free");
-    formData.append('model', config.model || "free");
+    formData.append('model', config.model || "deepseek-chat");
+    formData.append('base_url', config.baseUrl || "");
     
     fetch(`${API_BASE}/api/document/translate`, {
         method: 'POST',
@@ -747,8 +670,8 @@ function translateForSubtitle(text) {
         source_lang: langs.sourceLang,
         target_lang: langs.targetLang,
         api_key: config.apiKey || "",
-        api_service: config.apiService || "free",
-        model: config.model || "free"
+        model: config.model || "deepseek-chat",
+        base_url: config.baseUrl || ""
     };
     
     fetch(`${API_BASE}/api/transcribe`, {

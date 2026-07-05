@@ -158,12 +158,6 @@ body {
     margin: 0 auto;
 }
 
-.service-tabs {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
 .tab-btn {
     flex: 1;
     padding: 12px 24px;
@@ -891,16 +885,6 @@ body {
 .subtitle-settings {
     flex-wrap: wrap;
     align-items: center;
-}
-
-.service-tabs {
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.service-tabs .tab-btn {
-    padding: 8px 14px;
-    font-size: 14px;
 }
 
 @media (max-width: 768px) {
